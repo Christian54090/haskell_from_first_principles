@@ -7,6 +7,10 @@ fibonacci 0 = 0
 fibonacci 1 = 1
 fibonacci n = fibonacci (n-1) + fibonacci (n-2)
 
+fibSequence :: Integral a => a -> a -> [a]
+fibSequence 0 _ = []
+fibSequence t i = (fibonacci i) : fibSequence (t-1) (i+1)
+
 sumAll :: (Eq a, Num a) => a -> a
 sumAll 1 = 1
 sumAll n = n + sumAll (n-1)
