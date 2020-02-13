@@ -1,3 +1,6 @@
+-- Foldable gives us a way to process values embedded in a structure as if they
+-- existed in a sequential order
+
 import Data.Monoid
 import Data.Foldable
 
