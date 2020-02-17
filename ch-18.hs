@@ -1,5 +1,5 @@
 import Control.Monad (join, liftM2, liftM3, (>=>))
-import Control.Applicative ((*>))
+import Control.Applicative
 
 bind :: Monad m => (a -> m b) -> m a -> m b
 bind f a = join $ fmap f a
@@ -81,3 +81,62 @@ getAge = sayHi >=> readM
 askForAge :: IO Int
 askForAge =
   getAge "Hello, how old are you? "
+
+data Sum a b = First a | Second b deriving (Eq, Show)
+
+instance Functor (Sum a) where
+  fmap _ (First a)  = First a
+  fmap f (Second b) = Second (f b)
+
+instance Applicative (Sum a) where
+  pure                      = Second
+  (First a) <*> _           = First a
+  _ <*> (First a)           = First a
+  (Second f) <*> (Second a) = Second (f a)
+
+instance Monad (Sum a) where
+  return = pure
+  (First a)  >>= _ = First a
+  (Second b) >>= f = f b
+
+newtype Identity a = Identity a deriving (Eq, Ord, Show)
+
+instance Functor Identity where
+  fmap f (Identity a) = Identity (f a)
+
+instance Applicative Identity where
+  pure = Identity
+  (Identity f) <*> (Identity a) = Identity (f a)
+
+instance Monad Identity where
+  return = pure
+  (Identity a) >>= f = f a
+
+data List a = Nil | Cons a (List a) deriving Show
+
+instance Functor List where
+  fmap _ Nil = Nil
+  fmap f (Cons x xs) = Cons (f x) (fmap f xs)
+
+instance Applicative List where
+  pure a = Cons a Nil
+  Nil <*> _ = Nil
+  _ <*> Nil = Nil
+  (Cons f fs) <*> xs = (f <$> xs) `append` (fs <*> xs)
+
+instance Monad List where
+  return = pure
+  Nil >>= _ = Nil
+  (Cons x xs) >>= f = (f x) `append` (xs >>= f)
+
+append :: List a -> List a -> List a
+append xs Nil = xs
+append Nil ys = ys
+append (Cons x xs) ys = Cons x $ xs `append` ys
+
+j :: Monad m => m (m a) -> m a
+j x = x >>= fmap id
+
+meh :: Monad m => [a] -> (a -> m b) -> m [b]
+meh [] _ = return []
+meh (x:xs) f = f x >>= (\b -> fmap (b:) (meh xs f))
